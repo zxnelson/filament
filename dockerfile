@@ -35,9 +35,6 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 # Instalar dependencias de Composer
 WORKDIR /var/www/html
 
-# Actualizar composer.lock para resolver conflictos
-RUN composer update inertiajs/inertia-laravel --no-dev --optimize-autoloader
-
 # Exponer puerto
 EXPOSE 80
 
