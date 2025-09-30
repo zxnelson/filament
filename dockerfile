@@ -81,9 +81,9 @@ EXPOSE 80
 
 # Script de inicio
 RUN echo '#!/bin/bash\n\
-php artisan config:cache\n\
-php artisan route:cache\n\
-php artisan view:cache\n\
+#php artisan config:cache\n\
+#php artisan route:cache\n\
+#php artisan view:cache\n\
 php artisan migrate --force\n\
 apache2-foreground' > /usr/local/bin/start.sh \
     && chmod +x /usr/local/bin/start.sh
