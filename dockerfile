@@ -1,5 +1,5 @@
 # Etapa de construcción
-FROM php:8.1-apache AS builder
+FROM php:8.2-apache AS builder
 
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
@@ -9,13 +9,15 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
+    libicu-dev \
     zip \
     unzip \
     nodejs \
     npm
 
-# Instalar extensiones de PHP
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+# Instalar extensiones de PHP (agregando intl)
+RUN docker-php-ext-configure intl \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -26,14 +28,15 @@ WORKDIR /var/www/html
 # Copiar archivos del proyecto
 COPY . .
 
-# Instalar dependencias de PHP
-RUN composer install --optimize-autoloader --no-dev
+# Instalar dependencias de PHP (actualizar y generar lock)
+RUN composer update --optimize-autoloader --no-dev && \
+    composer dump-autoload --optimize
 
 # Instalar dependencias de Node.js y compilar assets
 RUN npm install && npm run build
 
 # Etapa final
-FROM php:8.1-apache
+FROM php:8.2-apache
 
 # Instalar dependencias necesarias para producción
 RUN apt-get update && apt-get install -y \
@@ -41,7 +44,9 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
+    libicu-dev \
+    && docker-php-ext-configure intl \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Habilitar mod_rewrite de Apache
